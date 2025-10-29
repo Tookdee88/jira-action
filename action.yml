@@ -1,5 +1,14 @@
 name: 🔍 Jira Issue Check
-
+inputs:
+  branch-name:  # New input for the branch name
+    description: 'The branch name passed from the calling workflow.'
+    required: true
+  jira-base-url:
+    description: 'The base URL for the self-hosted Jira instance.'
+    required: true
+  jira-token:
+    description: 'The API token for authentication.'
+    required: true
 on:
   push:
     branches:
@@ -8,8 +17,6 @@ on:
       - 'feat/CJXPL-**'
 jobs:
   check_jira_status:
-
-    runs-on: tdtech-runners
     
     steps:
       # - name: 📦 Install utilities
@@ -19,7 +26,7 @@ jobs:
         id: extract_key
         run: |
           # BRANCH_NAME="${{ github.head_ref }}"
-          BRANCH_NAME="${{ github.ref_name }}"
+          BRANCH_NAME="${{ inputs.branch-name }}"
           
           # Check if the branch name starts with a standard prefix and contains a Jira key (e.g., feature/ABC-123-description)
           if [[ "$BRANCH_NAME" =~ (feat|hotfix|bugfix)/([A-Z]+-[0-9]+) ]]; then
