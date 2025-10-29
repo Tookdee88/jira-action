@@ -35,8 +35,8 @@ runs:
       id: get_status
       shell: bash
       run: |
-        JIRA_URL="${inputs.jira-base-url}"
-        JIRA_AUTH="${inputs.jira-token}"
+        JIRA_URL="${{ inputs.jira-base-url }}"
+        JIRA_AUTH="${{ inputs.jira-token }}"
         ISSUE_KEY="${{ steps.extract_key.outputs.issue_key }}"
         HTTP_STATUS=$(curl -s -o /tmp/jira_response.json -w "%{http_code}" \
         --location --request GET "${{ JIRA_URL }}/rest/api/2/issue/$ISSUE_KEY?fields=status" \
