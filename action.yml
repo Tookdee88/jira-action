@@ -24,9 +24,9 @@ jobs:
 
       - name: ⚙️ Extract Issue Key from Branch Name
         id: extract_key
+        env:
+          BRANCH_NAME: ${{ inputs.branch-name }}
         run: |
-          BRANCH_NAME="${{ inputs.branch-name }}"
-          
           # Check if the branch name starts with a standard prefix and contains a Jira key (e.g., feature/ABC-123-description)
           if [[ "$BRANCH_NAME" =~ (feat|hotfix|bugfix)/([A-Z]+-[0-9]+) ]]; then
             ISSUE_KEY="${BASH_REMATCH[2]}"
