@@ -17,7 +17,7 @@ on:
       - 'feat/CJXPL-**'
 jobs:
   check_jira_status:
-    
+    using: "composite"
     steps:
       # - name: 📦 Install utilities
       #   run: sudo apt-get update && sudo apt-get install -y jq curl
