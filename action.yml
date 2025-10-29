@@ -33,6 +33,7 @@ runs:
     - name: 📞 Get Jira Issue Status
       if: steps.extract_key.outputs.issue_key != ''
       id: get_status
+      shell: bash
       run: |
         JIRA_URL="$INPUT_JIRA_BASE_URL"
         JIRA_AUTH="$INPUT_JIRA_TOKEN"
@@ -71,6 +72,7 @@ runs:
       
     - name: ❌ Fail if Status is Not 'Done' (Example Check)
       if: steps.extract_key.outputs.issue_key != ''
+      shell: bash
       run: |
         CURRENT_STATUS="${{ steps.get_status.outputs.issue_status }}"
         
