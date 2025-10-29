@@ -21,7 +21,7 @@ runs:
       run: |
         BRANCH_NAME= "${{ inputs.branch-name }}"
         # Check if the branch name starts with a standard prefix and contains a Jira key (e.g., feature/ABC-123-description)
-        if [[ "${BRANCH_NAME}" =~ (feat|hotfix|bugfix)/([A-Z]+-[0-9]+) ]]; then
+        if [[ "$(echo ${BRANCH_NAME} | cut -d "/" -f1)" =~ (feat|hotfix|bugfix)/([A-Z]+-[0-9]+) ]]; then
           ISSUE_KEY="${BASH_REMATCH[2]}"
           echo "Extracted Jira Issue Key: $ISSUE_KEY"
           echo "issue_key=$ISSUE_KEY" >> $GITHUB_OUTPUT
