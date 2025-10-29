@@ -8,9 +8,6 @@ on:
       - 'feat/CJXPL-**'
 jobs:
   check_jira_status:
-    env:
-      JIRA_BASE_URL: https://jira.tdshop.io
-      JIRA_API_TOKEN: ${{ secrets.JIRA_ACCESS_TOKEN }} # jira token
 
     runs-on: tdtech-runners
     
@@ -38,11 +35,13 @@ jobs:
         if: steps.extract_key.outputs.issue_key != ''
         id: get_status
         run: |
+          JIRA_URL="$INPUT_JIRA_BASE_URL"
+          JIRA_AUTH="$INPUT_JIRA_TOKEN"
           ISSUE_KEY="${{ steps.extract_key.outputs.issue_key }}"
           HTTP_STATUS=$(curl -s -o /tmp/jira_response.json -w "%{http_code}" \
-          --location --request GET "${{ env.JIRA_BASE_URL }}/rest/api/2/issue/$ISSUE_KEY?fields=status" \
+          --location --request GET "${{ env.JIRA_URL }}/rest/api/2/issue/$ISSUE_KEY?fields=status" \
           --header 'Accept: application/json' \
-          --header "Authorization: Bearer ${{ env.JIRA_API_TOKEN }}" )
+          --header "Authorization: Bearer ${{ env.JIRA_AUTH }}" )
           
           echo "Jira API HTTP Status: $HTTP_STATUS"
 
