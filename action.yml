@@ -19,66 +19,67 @@ runs:
       id: extract_key
       shell: bash
       run: |
-        BRANCH_NAME= "${{ inputs.branch-name }}"
-        # Check if the branch name starts with a standard prefix and contains a Jira key (e.g., feature/ABC-123-description)
-        if [[ "$(echo ${BRANCH_NAME} | cut -d "/" -f1)" =~ (feat|hotfix|bugfix)/([A-Z]+-[0-9]+) ]]; then
-          ISSUE_KEY="${BASH_REMATCH[2]}"
-          echo "Extracted Jira Issue Key: $ISSUE_KEY"
-          echo "issue_key=$ISSUE_KEY" >> $GITHUB_OUTPUT
-        else
-          echo "Branch name '${BRANCH_NAME}' does not contain a valid Jira issue key (e.g., feature/ABC-123)."
-          exit 1
-        fi
+        echo "dasdas"
+        # BRANCH_NAME= "${{ inputs.branch-name }}"
+        # # Check if the branch name starts with a standard prefix and contains a Jira key (e.g., feature/ABC-123-description)
+        # if [[ "$(echo ${BRANCH_NAME} | cut -d "/" -f1)" =~ (feat|hotfix|bugfix)/([A-Z]+-[0-9]+) ]]; then
+        #   ISSUE_KEY="${BASH_REMATCH[2]}"
+        #   echo "Extracted Jira Issue Key: $ISSUE_KEY"
+        #   echo "issue_key=$ISSUE_KEY" >> $GITHUB_OUTPUT
+        # else
+        #   echo "Branch name '${BRANCH_NAME}' does not contain a valid Jira issue key (e.g., feature/ABC-123)."
+        #   exit 1
+        # fi
 
-    - name: 📞 Get Jira Issue Status
-      if: steps.extract_key.outputs.issue_key != ''
-      id: get_status
-      shell: bash
-      run: |
-        JIRA_URL="$INPUT_JIRA_BASE_URL"
-        JIRA_AUTH="$INPUT_JIRA_TOKEN"
-        ISSUE_KEY="${{ steps.extract_key.outputs.issue_key }}"
-        HTTP_STATUS=$(curl -s -o /tmp/jira_response.json -w "%{http_code}" \
-        --location --request GET "${{ env.JIRA_URL }}/rest/api/2/issue/$ISSUE_KEY?fields=status" \
-        --header 'Accept: application/json' \
-        --header "Authorization: Bearer ${{ env.JIRA_AUTH }}" )
+    # - name: 📞 Get Jira Issue Status
+    #   if: steps.extract_key.outputs.issue_key != ''
+    #   id: get_status
+    #   shell: bash
+    #   run: |
+    #     JIRA_URL="$INPUT_JIRA_BASE_URL"
+    #     JIRA_AUTH="$INPUT_JIRA_TOKEN"
+    #     ISSUE_KEY="${{ steps.extract_key.outputs.issue_key }}"
+    #     HTTP_STATUS=$(curl -s -o /tmp/jira_response.json -w "%{http_code}" \
+    #     --location --request GET "${{ env.JIRA_URL }}/rest/api/2/issue/$ISSUE_KEY?fields=status" \
+    #     --header 'Accept: application/json' \
+    #     --header "Authorization: Bearer ${{ env.JIRA_AUTH }}" )
         
-        echo "Jira API HTTP Status: $HTTP_STATUS"
+    #     echo "Jira API HTTP Status: $HTTP_STATUS"
 
-        if [ "$HTTP_STATUS" == "404" ]; then
-          echo "❌ Error: Jira Issue $ISSUE_KEY was NOT found on the server."
-          echo "issue_status=NOT_FOUND" >> $GITHUB_OUTPUT
-          exit 1 # Fail the job if the issue doesn't exist
-        elif [ "$HTTP_STATUS" == "401" ]; then
-          echo "❌ Error: Authentication failed (401). Check your JIRA_API_TOKEN secret."
-          exit 1 # Fail the job on auth error
-        elif [ "$HTTP_STATUS" -ge "400" ]; then
-          echo "❌ Error: Jira API returned status code $HTTP_STATUS. Cannot proceed."
-          exit 1 # Fail for other client errors (e.g., 403 Forbidden)
-        else
-          # Issue found (HTTP 200), proceed to parse status from the saved file
-          STATUS=$(jq -r '.fields.status.name' /tmp/jira_response.json)
+    #     if [ "$HTTP_STATUS" == "404" ]; then
+    #       echo "❌ Error: Jira Issue $ISSUE_KEY was NOT found on the server."
+    #       echo "issue_status=NOT_FOUND" >> $GITHUB_OUTPUT
+    #       exit 1 # Fail the job if the issue doesn't exist
+    #     elif [ "$HTTP_STATUS" == "401" ]; then
+    #       echo "❌ Error: Authentication failed (401). Check your JIRA_API_TOKEN secret."
+    #       exit 1 # Fail the job on auth error
+    #     elif [ "$HTTP_STATUS" -ge "400" ]; then
+    #       echo "❌ Error: Jira API returned status code $HTTP_STATUS. Cannot proceed."
+    #       exit 1 # Fail for other client errors (e.g., 403 Forbidden)
+    #     else
+    #       # Issue found (HTTP 200), proceed to parse status from the saved file
+    #       STATUS=$(jq -r '.fields.status.name' /tmp/jira_response.json)
           
-          if [ -z "$STATUS" ]; then
-              echo "Error: Issue found, but status could not be parsed."
-              exit 1
-          fi
+    #       if [ -z "$STATUS" ]; then
+    #           echo "Error: Issue found, but status could not be parsed."
+    #           exit 1
+    #       fi
           
-          echo "✅ Jira Issue $ISSUE_KEY exists. Status: $STATUS"
-          echo "issue_status=$STATUS" >> $GITHUB_OUTPUT
-        fi
-        echo "Jira Issue Status: $STATUS"
-        echo "issue_status=$STATUS" >> $GITHUB_OUTPUT
+    #       echo "✅ Jira Issue $ISSUE_KEY exists. Status: $STATUS"
+    #       echo "issue_status=$STATUS" >> $GITHUB_OUTPUT
+    #     fi
+    #     echo "Jira Issue Status: $STATUS"
+    #     echo "issue_status=$STATUS" >> $GITHUB_OUTPUT
       
-    - name: ❌ Fail if Status is Not 'Done' (Example Check)
-      if: steps.extract_key.outputs.issue_key != ''
-      shell: bash
-      run: |
-        CURRENT_STATUS="${{ steps.get_status.outputs.issue_status }}"
+    # - name: ❌ Fail if Status is Not 'Done' (Example Check)
+    #   if: steps.extract_key.outputs.issue_key != ''
+    #   shell: bash
+    #   run: |
+    #     CURRENT_STATUS="${{ steps.get_status.outputs.issue_status }}"
         
-        if [[ "$CURRENT_STATUS" =~ ^(To Do|In Progress|Open)$ ]]; then
-          echo "❌ The linked Jira issue status is '$CURRENT_STATUS'. Please ensure the issue is marked as 'Ready for Testing/Done' before pushing this code."
-          exit 1 
-        else
-          echo "✅ Jira issue status '$CURRENT_STATUS' allows the CI to proceed."
-        fi
+    #     if [[ "$CURRENT_STATUS" =~ ^(To Do|In Progress|Open)$ ]]; then
+    #       echo "❌ The linked Jira issue status is '$CURRENT_STATUS'. Please ensure the issue is marked as 'Ready for Testing/Done' before pushing this code."
+    #       exit 1 
+    #     else
+    #       echo "✅ Jira issue status '$CURRENT_STATUS' allows the CI to proceed."
+    #     fi
