@@ -19,8 +19,7 @@ runs:
       id: extract_key
       shell: bash
       run: |
-        echo "dasdas"
-        # BRANCH_NAME= "${{ inputs.branch-name }}"
+        BRANCH_NAME= "${{ inputs.branch-name }}"
         # # Check if the branch name starts with a standard prefix and contains a Jira key (e.g., feature/ABC-123-description)
         # if [[ "$(echo ${BRANCH_NAME} | cut -d "/" -f1)" =~ (feat|hotfix|bugfix)/([A-Z]+-[0-9]+) ]]; then
         #   ISSUE_KEY="${BASH_REMATCH[2]}"
