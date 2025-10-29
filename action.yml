@@ -25,7 +25,6 @@ jobs:
       - name: ⚙️ Extract Issue Key from Branch Name
         id: extract_key
         run: |
-          # BRANCH_NAME="${{ github.head_ref }}"
           BRANCH_NAME="${{ inputs.branch-name }}"
           
           # Check if the branch name starts with a standard prefix and contains a Jira key (e.g., feature/ABC-123-description)
