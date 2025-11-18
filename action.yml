@@ -93,8 +93,9 @@ runs:
           if [[ "$STATUS" != "Done" ]]; then
               echo "❌ Issue $ISSUE_KEY is '$STATUS'. Must be 'Done'."
               FAIL=true
+          else
+              echo "✅ $ISSUE_KEY is $STATUS"
           fi
-          echo "✔ $ISSUE_KEY is $STATUS"
         done
         if [ "$FAIL" = true ]; then
           echo "❌ One or more Jira issues are not 'Done'."
