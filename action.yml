@@ -86,11 +86,14 @@ runs:
           ISSUE_KEY=$(echo "$ITEM" | cut -d':' -f1)
           STATUS=$(echo "$ITEM" | cut -d':' -f2)
 
-          if [[ "$STATUS" =~ ^(To Do|In Progress|Open)$ ]]; then
-            echo "❌ Issue $ISSUE_KEY is '$STATUS'. Must be Done."
-            exit 1
+          # if [[ "$STATUS" =~ ^(To Do|In Progress|Open)$ ]]; then
+          #   echo "❌ Issue $ISSUE_KEY is '$STATUS'. Must be Done."
+          #   exit 1
+          # fi
+          if [[ "$STATUS" != "Done" ]]; then
+              echo "❌ Issue $ISSUE_KEY is '$STATUS'. Must be 'Done'."
+              exit 1
           fi
-
           echo "✔ $ISSUE_KEY is $STATUS"
         done
 
