@@ -42,7 +42,7 @@ runs:
       shell: bash
       run: |
         ALL_STATUS=""
-        IFS=',' read -ra KEYS <<< "${{ steps.extract_keys.outputs.issue_keys }}"
+        IFS=',' read -ra KEYS <<< "${{ steps.extract_keys.outputs.issue_key }}"
 
         for ISSUE_KEY in "${KEYS[@]}"; do
           echo "🔍 Checking Jira Issue: $ISSUE_KEY"
