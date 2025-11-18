@@ -36,70 +36,54 @@ runs:
         KEYS_CSV=$(echo "$ISSUE_KEYS" | paste -sd "," -)
         echo "issue_key=$KEYS_CSV" >> $GITHUB_OUTPUT
 
-    - name: 📞 Get Jira Issue Status
-      if: steps.extract_key.outputs.issue_key != ''
-      id: get_status
-      shell: bash
-      run: |
-        ALL_STATUS=""
-        IFS=',' read -ra KEYS <<< "${{ steps.extract_key.outputs.issue_key }}"
-
-        for ISSUE_KEY in "${KEYS[@]}"; do
-          echo "🔍 Checking Jira Issue: $ISSUE_KEY"
+    - name: 📞 Get Jira Issue Status and Validate
+    if: steps.extract_key.outputs.issue_key != ''
+    id: get_and_check_status
+    shell: bash
+    run: |
+      FAIL=false
+      IFS=',' read -ra KEYS <<< "${{ steps.extract_key.outputs.issue_key }}"
     
-          JIRA_URL="${{ inputs.jira-base-url }}"
-          JIRA_AUTH="${{ inputs.jira-token }}"
+      for ISSUE_KEY in "${KEYS[@]}"; do
+        echo "🔍 Checking Jira Issue: $ISSUE_KEY"
     
-          HTTP_STATUS=$(curl -s -o /tmp/jira_response.json -w "%{http_code}" \
-            --location --request GET "${JIRA_URL}/rest/api/2/issue/$ISSUE_KEY?fields=status" \
-            --header 'Accept: application/json' \
-            --header "Authorization: Bearer $JIRA_AUTH" )
+        JIRA_URL="${{ inputs.jira-base-url }}"
+        JIRA_AUTH="${{ inputs.jira-token }}"
     
-          echo "Jira API HTTP Status: $HTTP_STATUS"
+        HTTP_STATUS=$(curl -s -o /tmp/jira_response.json -w "%{http_code}" \
+          --location --request GET "${JIRA_URL}/rest/api/2/issue/$ISSUE_KEY?fields=status" \
+          --header 'Accept: application/json' \
+          --header "Authorization: Bearer $JIRA_AUTH" )
     
-          if [ "$HTTP_STATUS" == "404" ]; then
-            echo "❌ Error: Jira Issue $ISSUE_KEY was NOT found on the server."
-            echo "issue_status=NOT_FOUND" >> $GITHUB_OUTPUT
-            exit 1 # Fail the job if the issue doesn't exist
-          elif [ "$HTTP_STATUS" == "401" ]; then
-            echo "❌ Error: Authentication failed (401). Check your JIRA_API_TOKEN secret."
-            exit 1 # Fail the job on auth error
-          elif [ "$HTTP_STATUS" -ge "400" ]; then
-            echo "❌ Error: Jira API returned status code $HTTP_STATUS. Cannot proceed."
-            exit 1 # Fail for other client errors (e.g., 403 Forbidden)
-          fi
-          STATUS=$(jq -r '.fields.status.name' /tmp/jira_response.json)
-          echo "✔ $ISSUE_KEY Status: $STATUS"
-          ALL_STATUS="$ALL_STATUS$ISSUE_KEY:$STATUS,"
-        done
-        echo "all_status=${ALL_STATUS%,}" >> $GITHUB_OUTPUT
-    - name: ❌ Fail if Status is Not 'Done' (Example Check)
-      if: steps.extract_key.outputs.issue_key != ''
-      shell: bash
-      run: |
-        ALL_STATUS="${{ steps.get_status.outputs.all_status }}"
-        echo "All statuses: $ALL_STATUS"
-        FAIL=false
-        IFS=',' read -ra ITEMS <<< "$ALL_STATUS"
-
-        for ITEM in "${ITEMS[@]}"; do
-          ISSUE_KEY=$(echo "$ITEM" | cut -d':' -f1)
-          STATUS=$(echo "$ITEM" | cut -d':' -f2)
-
-          # if [[ "$STATUS" =~ ^(To Do|In Progress|Open)$ ]]; then
-          #   echo "❌ Issue $ISSUE_KEY is '$STATUS'. Must be Done."
-          #   exit 1
-          # fi
-          if [[ "$STATUS" != "Done" ]]; then
-              echo "❌ Issue $ISSUE_KEY is '$STATUS'. Must be 'Done'."
-              FAIL=true
-          else
-              echo "✅ $ISSUE_KEY is $STATUS"
-          fi
-        done
-        if [ "$FAIL" = true ]; then
-          echo "❌ One or more Jira issues are not 'Done'."
+        echo "Jira API HTTP Status: $HTTP_STATUS"
+    
+        if [ "$HTTP_STATUS" == "404" ]; then
+          echo "❌ Jira Issue $ISSUE_KEY not found."
+          FAIL=true
+          continue
+        elif [ "$HTTP_STATUS" == "401" ]; then
+          echo "❌ Authentication failed."
           exit 1
-        else
-          echo "🎉 All Jira issues are in allowed statuses!"
+        elif [ "$HTTP_STATUS" -ge "400" ]; then
+          echo "❌ Jira API returned $HTTP_STATUS."
+          FAIL=true
+          continue
         fi
+    
+        STATUS=$(jq -r '.fields.status.name' /tmp/jira_response.json)
+        echo "✔ $ISSUE_KEY Status: $STATUS"
+    
+        if [[ "$STATUS" != "Done" ]]; then
+          echo "❌ Issue $ISSUE_KEY is '$STATUS'. Must be 'Done'."
+          FAIL=true
+        else
+          echo "✅ $ISSUE_KEY is Done"
+        fi
+      done
+    
+      if [ "$FAIL" = true ]; then
+        echo "❌ One or more Jira issues are not 'Done'."
+        exit 1
+      else
+        echo "🎉 All Jira issues are 'Done'!"
+      fi
