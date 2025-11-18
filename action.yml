@@ -92,7 +92,7 @@ runs:
           # fi
           if [[ "$STATUS" != "Done" ]]; then
               echo "❌ Issue $ISSUE_KEY is '$STATUS'. Must be 'Done'."
-              fail=true
+              FAIL=true
           fi
           echo "✔ $ISSUE_KEY is $STATUS"
         done
