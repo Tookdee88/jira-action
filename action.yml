@@ -87,3 +87,11 @@ runs:
         else
           echo "🎉 All Jira issues are 'Done'!"
         fi
+    - name: Comment Jira Statuses on PR
+      if: always()
+      uses: peter-evans/create-or-update-comment@v5
+      with:
+        # issue-number: ${{ github.event.pull_request.number }}
+        body: |
+          ## Jira Issue Statuses
+          $ALL_STATUS  # Or format nicely in your loop
