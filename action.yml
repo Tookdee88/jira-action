@@ -42,6 +42,7 @@ runs:
       shell: bash
       run: |
         FAIL=false
+        SUMMARY="## Jira Issue Statuses\n"
         IFS=',' read -ra KEYS <<< "${{ steps.extract_key.outputs.issue_key }}"
       
         for ISSUE_KEY in "${KEYS[@]}"; do
@@ -57,20 +58,14 @@ runs:
       
           echo "Jira API HTTP Status: $HTTP_STATUS"
       
-          if [ "$HTTP_STATUS" == "404" ]; then
-            echo "❌ Jira Issue $ISSUE_KEY not found."
-            FAIL=true
-            continue
-          elif [ "$HTTP_STATUS" == "401" ]; then
-            echo "❌ Authentication failed."
-            exit 1
-          elif [ "$HTTP_STATUS" -ge "400" ]; then
-            echo "❌ Jira API returned $HTTP_STATUS."
+          if [ "$HTTP_STATUS" -ne 200 ]; then
+            SUMMARY+="❌ **$ISSUE_KEY** → Error (HTTP $HTTP_STATUS)\n"
             FAIL=true
             continue
           fi
       
           STATUS=$(jq -r '.fields.status.name' /tmp/jira_response.json)
+          SUMMARY+="- **$ISSUE_KEY** → $STATUS\n"
           echo "✔ $ISSUE_KEY Status: $STATUS"
       
           if [[ "$STATUS" != "Done" ]]; then
@@ -80,6 +75,10 @@ runs:
             echo "✅ $ISSUE_KEY is Done"
           fi
         done
+        # Export summary to next step
+        # Escape newlines for GitHub output
+        SUMMARY_ESCAPED=$(printf "%s" "$SUMMARY" | sed ':a;N;$!ba;s/\n/%0A/g')
+        echo "summary=$SUMMARY_ESCAPED" >> $GITHUB_OUTPUT
       
         if [ "$FAIL" = true ]; then
           echo "❌ One or more Jira issues are not 'Done'."
@@ -92,6 +91,4 @@ runs:
       uses: peter-evans/create-or-update-comment@v5
       with:
         issue-number: ${{ github.event.pull_request.number }}
-        body: |
-          ## Jira Issue Statuses
-          $ALL_STATUS  # Or format nicely in your loop
+        body: ${{ steps.get_and_check_status.outputs.summary }}
