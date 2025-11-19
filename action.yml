@@ -43,6 +43,9 @@ runs:
       run: |
         FAIL=false
         SUMMARY="## Jira Issue Statuses\n"
+        OUTPUT_FILE=$(mktemp)
+        DELIMITER="EOF_JIRA_SUMMARY"
+        echo "## Jira Issue Statuses" >> "$OUTPUT_FILE"
         IFS=',' read -ra KEYS <<< "${{ steps.extract_key.outputs.issue_key }}"
       
         for ISSUE_KEY in "${KEYS[@]}"; do
@@ -67,7 +70,8 @@ runs:
           STATUS=$(jq -r '.fields.status.name' /tmp/jira_response.json)
           SUMMARY+="- **$ISSUE_KEY** → $STATUS\n"
           echo "✔ $ISSUE_KEY Status: $STATUS"
-      
+          echo "- **$ISSUE_KEY** → $STATUS" >> "$OUTPUT_FILE"
+          
           if [[ "$STATUS" != "Done" ]]; then
             echo "❌ Issue $ISSUE_KEY is '$STATUS'. Must be 'Done'."
             FAIL=true
@@ -78,11 +82,14 @@ runs:
         # Export summary to next step
         # Escape newlines for GitHub output
         SUMMARY_ESCAPED=$(printf "%s" "$SUMMARY" | sed ':a;N;$!ba;s/\n/%0A/g')
-        echo "summary=$SUMMARY_ESCAPED" >> $GITHUB_OUTPUT
-        echo "--- DEBUG: ESCAPED SUMMARY ---"
-        echo "$SUMMARY_ESCAPED"
-        echo "------------------------------"
-      
+        # echo "summary=$SUMMARY_ESCAPED" >> $GITHUB_OUTPUT
+        echo "summary<<$DELIMITER" >> "$GITHUB_OUTPUT"
+        
+        # Cat the entire file content into the output block
+        cat "$OUTPUT_FILE" >> "$GITHUB_OUTPUT"
+        
+        # End the $GITHUB_OUTPUT block with the same delimiter
+        echo "$DELIMITER" >> "$GITHUB_OUTPUT"
         if [ "$FAIL" = true ]; then
           echo "❌ One or more Jira issues are not 'Done'."
           exit 1
