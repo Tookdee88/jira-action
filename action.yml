@@ -77,8 +77,13 @@ runs:
         done
         # Export summary to next step
         # Escape newlines for GitHub output
-        SUMMARY_ESCAPED=$(printf "%s" "$SUMMARY" | sed ':a;N;$!ba;s/\n/%0A/g')
-        echo "summary=$SUMMARY_ESCAPED" >> $GITHUB_OUTPUT
+        # SUMMARY_ESCAPED=$(printf "%s" "$SUMMARY" | sed ':a;N;$!ba;s/\n/%0A/g')
+        # echo "summary=$SUMMARY_ESCAPED" >> $GITHUB_OUTPUT
+        {
+          echo "summary<<EOF"
+          echo "$SUMMARY"
+          echo "EOF"
+        } >> "$GITHUB_OUTPUT"
       
         if [ "$FAIL" = true ]; then
           echo "❌ One or more Jira issues are not 'Done'."
