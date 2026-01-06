@@ -66,20 +66,18 @@ runs:
             FAIL=true
             continue
           fi
-          if [[ "$STATUS" == "Done" ]]; then
-            ICON="✅"
-            echo "1111111"
-          else
-            echo "22222222"
-            ICON="❌"
-            FAIL=true
-          fi
+          # if [[ "$STATUS" == "Done" ]]; then
+          #   ICON="✅"=
+          # else
+          #   ICON="❌"
+          #   FAIL=true
+          # fi
           STATUS=$(jq -r '.fields.status.name' /tmp/jira_response.json)
           TITLE=$(jq -r '.fields.summary' /tmp/jira_response.json)
-          SUMMARY+="- $ICON **$ISSUE_KEY** → $STATUS\n"
+          SUMMARY+="- **$ISSUE_KEY** → $STATUS\n"
           echo "✔ $ISSUE_KEY Status: $STATUS"
           # echo "- **$ISSUE_KEY** → $STATUS" >> "$OUTPUT_FILE"
-          echo "- **$ISSUE_KEY**: $TITLE → \`$STATUS\`" >> "$OUTPUT_FILE"
+          echo "- $ICON **$ISSUE_KEY**: $TITLE → \`$STATUS\`" >> "$OUTPUT_FILE"
           
           if [[ "$STATUS" != "Done" ]]; then
             echo "❌ Issue $ISSUE_KEY is '$STATUS'. Must be 'Done'."
