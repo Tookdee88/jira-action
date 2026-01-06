@@ -68,9 +68,11 @@ runs:
           fi
       
           STATUS=$(jq -r '.fields.status.name' /tmp/jira_response.json)
+          TITLE=$(jq -r '.fields.summary' /tmp/jira_response.json)
           SUMMARY+="- **$ISSUE_KEY** → $STATUS\n"
           echo "✔ $ISSUE_KEY Status: $STATUS"
-          echo "- **$ISSUE_KEY** → $STATUS" >> "$OUTPUT_FILE"
+          # echo "- **$ISSUE_KEY** → $STATUS" >> "$OUTPUT_FILE"
+          echo "- **$ISSUE_KEY**: $TITLE → \`$STATUS\`" >> "$OUTPUT_FILE"
           
           if [[ "$STATUS" != "Done" ]]; then
             echo "❌ Issue $ISSUE_KEY is '$STATUS'. Must be 'Done'."
